@@ -102,6 +102,8 @@ The performance chart will be saved in the plots/ directory.
 ------------------------------------------------------------------------------------
 
 Future Improvements
+------------------------------------------------------------------------------------
+
 Hyperparameter Tuning: Systematically tune the PPO algorithm's hyperparameters (e.g., learning rate, network size) using Ray Tune to optimize performance.
 
 Expanded Feature Set: Incorporate more advanced quantitative features into the observation space, such as MACD, Bollinger Bands, or market-wide volatility indices (VIX).
@@ -111,4 +113,5 @@ Curriculum Learning: Implement a curriculum where the agent first learns in a si
 ------------------------------------------------------------------------------------
 
 License
+------------------------------------------------------------------------------------
 This project is licensed under the MIT License. See the LICENSE file for details.
