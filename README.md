@@ -95,7 +95,8 @@ tensorboard --logdir checkpoints_multi/
 
 Once training is complete, run the evaluation script. It will automatically load the latest trained checkpoint and generate a plot of the agent's performance against the benchmarks.
 
-Bash
+
+
 python evaluate.py
 The performance chart will be saved in the plots/ directory.
 ------------------------------------------------------------------------------------
@@ -106,6 +107,7 @@ Hyperparameter Tuning: Systematically tune the PPO algorithm's hyperparameters (
 Expanded Feature Set: Incorporate more advanced quantitative features into the observation space, such as MACD, Bollinger Bands, or market-wide volatility indices (VIX).
 
 Curriculum Learning: Implement a curriculum where the agent first learns in a simplified environment (e.g., no transaction costs) before moving to the full, complex simulation.
+
 ------------------------------------------------------------------------------------
 
 License
