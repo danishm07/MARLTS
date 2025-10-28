@@ -95,10 +95,10 @@ tensorboard --logdir checkpoints_multi/
 
 Once training is complete, run the evaluation script. It will automatically load the latest trained checkpoint and generate a plot of the agent's performance against the benchmarks.
 
+run python evaluate.py
 
-
-python evaluate.py
 The performance chart will be saved in the plots/ directory.
+
 ------------------------------------------------------------------------------------
 
 Future Improvements
