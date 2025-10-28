@@ -28,7 +28,9 @@ class MultiAssetMarketEnv(ParallelEnv):
         self.coop_weight = float(coop_weight) #weight for cooperative reward component
         self.comp_weight = float(comp_weight) #weight for competitive reward component
 
-        
+        #momentum, mean reversion, market making, rl trader
+        #mean reversion is the opposite of momentum, and market making works by basiclly buying low and selling high around current price 
+        # (liquidity to market)
         self.possible_agents = agents or ["mom_0", "mean_0", "mm_0", "rl_trader_0"]
         self.agents = list(self.possible_agents)
 
@@ -37,7 +39,7 @@ class MultiAssetMarketEnv(ParallelEnv):
 
         #window_size -1 because we want to see previous window_size -1 days + today + cash
         #+1 for cash position (refers to cash available to trade)
-        obs_len = (self.window_size - 1) * self.n_assets + self.n_assets + 1
+        obs_len = (self.window_size - 1) * self.n_assets +  self.n_assets +self.n_assets + 1
 
         #infinite observation spaces 
         #observation spaces are a vector of length obs_len, which includes historical prices for all assets and current cash position
@@ -113,47 +115,56 @@ class MultiAssetMarketEnv(ParallelEnv):
     #this refers to the state of the environment as seen by the agent
     #for example, agents sees: historical prices for all assets, current holdings, and cash position
     #in vector form this would look like: [r1_t-window, r1_t-window+1, ..., r1_t, r2_t-window, ..., rN_t, holdings_1, ..., holdings_N, cash]
+    # multi_asset_env.py -> _get_obs method
+
     def _get_obs(self, agent):
         """Return the observation for a given agent."""
         idx = self._cur_step
-        start_idx = max(self._start, self._start + idx - (self.window_size - 1))
+        rsi_window = 14
+        # Ensure we have enough data for RSI + the observation window
+        start_idx = max(0, self._start + idx - (self.window_size - 1) - rsi_window)
         end_idx = self._start + idx
 
-        # Slice price history safely
-        window = self.price_df.iloc[start_idx:end_idx + 1].values
-        if window.shape[0] < 2:
-            # Not enough data for returns, pad with zeros
-            returns = np.zeros((self.window_size - 1, self.n_assets), dtype=np.float32)
-        else:
-            # Calculate log returns
-            lr = np.diff(np.log(window + 1e-9), axis=0)
-            # Pad if needed to match window_size - 1
-            if lr.shape[0] < (self.window_size - 1):
-                pad_top = np.zeros(((self.window_size - 1) - lr.shape[0], self.n_assets), dtype=np.float32)
-                lr = np.vstack([pad_top, lr])
-            returns = lr.astype(np.float32)
+        price_window_df = self.price_df.iloc[start_idx : end_idx + 1]
 
-        # Flatten returns
-        returns_flat = returns.flatten().astype(np.float32)
+        # 1. Calculate Log Returns for the observation window
+        log_returns_window = np.log(price_window_df / price_window_df.shift(1)).iloc[-(self.window_size - 1) :]
+        returns_flat = log_returns_window.fillna(0.0).values.flatten().astype(np.float32)
 
-        # Normalize holdings safely
+        # 2. Calculate RSI (Relative Strength Index)
+        #RSI here indicates momentum of price movements
+        delta = price_window_df.diff()
+        up = delta.clip(lower=0)
+        down = -1 * delta.clip(upper=0)
+        ema_up = up.ewm(com=rsi_window - 1, adjust=False).mean()
+        ema_down = down.ewm(com=rsi_window - 1, adjust=False).mean()
+        rs = ema_up / (ema_down + 1e-9)
+        rsi = 100 - (100 / (1 + rs))
+
+        
+        # Fill any NaN values with the neutral RSI value of 50.0 before normalizing.
+        rsi = rsi.fillna(50.0)
+        
+        rsi_latest = rsi.iloc[-1].values.astype(np.float32)
+        rsi_norm = (rsi_latest - 50) / 50.0
+
+        # 3. Normalize Holdings
         holdings_vector = self.holdings.get(agent, np.zeros(self.n_assets, dtype=float))
         norm = np.linalg.norm(holdings_vector)
         holdings_norm = (holdings_vector / (norm + 1e-9)).astype(np.float32)
 
-        # Normalize cash
+        # 4. Normalize Cash
         cash_value = self.cash.get(agent, self.initial_cash)
         cash_norm = np.array([cash_value / (self.initial_cash * 10.0)], dtype=np.float32)
 
-        # Concatenate into final observation
-        obs = np.concatenate([returns_flat, holdings_norm, cash_norm]).astype(np.float32)
+        # 5. Concatenate final observation vector
+        obs = np.concatenate([returns_flat, rsi_norm, holdings_norm, cash_norm]).astype(np.float32)
 
         # Sanity check: observation length
-        expected_len = (self.window_size - 1) * self.n_assets + self.n_assets + 1
+        expected_len = (self.window_size - 1) * self.n_assets + self.n_assets + self.n_assets + 1
         if len(obs) != expected_len:
-            raise RuntimeError(
-                f"Observation length mismatch for agent {agent}: got {len(obs)}, expected {expected_len}"
-            )
+            padding = np.zeros(expected_len - len(obs), dtype=np.float32)
+            obs = np.concatenate([padding, obs])
 
         return obs
 

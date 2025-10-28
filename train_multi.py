@@ -17,7 +17,7 @@ import numpy as np
 
 from pettingzoo.utils import parallel_to_aec, ParallelEnv
 
-CHECKPOINT_DIR = "/Users/danish/Desktop/01_Projects/MARLTS/checkpoints_multi"
+CHECKPOINT_DIR = "/Users/danish/Desktop/01_Projects/MARLTS/checkpoints_multi_2"
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
 class CustomMetrics(DefaultCallbacks):
@@ -54,13 +54,16 @@ def env_creator_from_df(price_df, agents, episode_length = 252, window_size = 20
             "commission": env_config.get("commission", commission),
         }
 
+        #not usin cfg so that extra params can be passed if needed
+
         base_env = make_env(
-            cfg["price_df"], 
-            agents=cfg["agents"], 
-            episode_length=cfg["episode_length"], 
-            window_size=cfg["window_size"], 
-            commission=cfg["commission"], 
-            initial_cash=cfg["initial_cash"]
+            price_df=price_df, 
+            agents=agents, 
+            episode_length=env_config.get("episode_length", episode_length), 
+            window_size=env_config.get("window_size", window_size), 
+            commission=env_config.get("commission", commission), 
+            initial_cash=env_config.get("initial_cash", 100_000.0),
+            **env_config
         )
         
         # Wrap properly for RLlib
@@ -122,10 +125,15 @@ def main():
     
 
     
-    config = config.environment(env="multi_asset_market_env")
+    config = config.environment(
+        env="multi_asset_market_env",
+        env_config = {
+            "coop_weight": 0.01,
+            "comp_weight": 0.5
+        })
     config = config.callbacks(CustomMetrics)
     config = config.env_runners(
-        num_env_runners=1, # Renamed from num_rollout_workers
+        num_env_runners=1, 
         rollout_fragment_length=200,
         batch_mode="truncate_episodes",
     )
@@ -134,6 +142,11 @@ def main():
         lr=3e-4,
         #sgd_minibatch_size=256,
         num_sgd_iter=10,
+        #entropy for exploraton stuff
+        entropy_coeff = 0.01,
+        #use generalized advantage estiamtiaon for staility
+        use_gae = True,
+        lambda_ = 0.95,
         )
     config = config.framework(framework="torch")
     config = config.multi_agent(
@@ -169,4 +182,4 @@ if __name__ == "__main__":
     main()
 
 
-#tensorboard --logdir /Users/danish/Desktop/01_Projects/MARLTS/checkpoints_multi
+#tensorboard --logdir /Users/danish/Desktop/01_Projects/MARLTS/checkpoints_multi_2

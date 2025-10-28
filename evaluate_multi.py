@@ -23,8 +23,8 @@ from agents import MomentumAgent, MeanReversionAgent, MarketMakerAgent
 from utils import compute_metrics, plot_portfolios_multi, plot_allocations_stacked
 import gymnasium as gym
 
-# --- CONFIGURATION CONSTANTS ---
-CHECKPOINT_DIR = "checkpoints_multi"
+
+CHECKPOINT_DIR = "checkpoints_multi_2"
 TICKERS = ["AAPL", "MSFT", "NVDA", "TSLA"]
 AGENTS = ["mom_0", "mean_0", "mm_0", "rl_trader_0"]
 EPISODE_LENGTH = 252
@@ -246,6 +246,6 @@ if __name__ == "__main__":
     nsteps = len(next(iter(portfolios.values())))
     price_slice = price_df.iloc[start:start + nsteps]
 
-    plot_portfolios_multi(price_slice, portfolios, outdir="plots")
-    plot_allocations_stacked(allocations, price_slice.index, outdir="plots")
+    plot_portfolios_multi(price_slice, portfolios, outdir="plots_2")
+    plot_allocations_stacked(allocations, price_slice.index, outdir="plots_2")
     print("Evaluation completed.")
