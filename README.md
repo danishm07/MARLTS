@@ -1,15 +1,15 @@
 Multi-Agent Reinforcement Learning Trading System (MARLTS)
 -------------------------------------------------------------
 
-This project implements a sophisticated Multi-Agent Reinforcement Learning (MARL) environment to train an autonomous trading agent. The agent learns to develop a profitable strategy not against static historical data, but by actively competing against a dynamic set of heuristic agents (Momentum, Mean-Reversion, and Market-Maker) in a realistic market simulation.
+This project implements a simple yet sophisticated Multi-Agent Reinforcement Learning (MARL) environment to train an autonomous trading agent. The agent learns to develop a profitable strategy not against static historical data, but by actively competing against a dynamic set of heuristic agents (Momentum, Mean-Reversion, and Market-Maker) in a realistic market simulation.
 
+-------------------------------------------------------------
 The core of the project is a Proximal Policy Optimization (PPO) agent, trained using the Ray RLlib framework, that learns to navigate a custom financial market built with the PettingZoo library.
-------------------------------------------------------------------------------------
 
 📈 Results: Learned Performance
 After training, the RL agent successfully developed a unique and superior trading strategy, consistently outperforming all three heuristic benchmarks in the evaluation period. The agent learned to balance aggressive, profit-seeking behavior with effective risk management.
 
-Final evaluation showing the RL Trader (red) achieving the highest portfolio value.
+Final evaluation showing the RL Trader (red) achieving the highest portfolio value. (initial results in /plots, improved results in /plots_2)
 
 ✨ Key Features
 Custom MARL Environment: A financial market simulation built from scratch using PettingZoo, featuring multiple interacting agents.
