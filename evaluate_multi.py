@@ -143,7 +143,7 @@ def run_eval(ckpt_path, price_df, episode_length=EPISODE_LENGTH, window_size=WIN
     algo = Algorithm(config)
     algo.restore(ckpt_path)
 
-    # 4. Prepare agents and environment for rollout
+    # 4. Prepare agents 
     mom_agent = MomentumAgent(TICKERS)
     mean_agent = MeanReversionAgent(TICKERS)
     mm_agent = MarketMakerAgent(TICKERS)
@@ -151,7 +151,7 @@ def run_eval(ckpt_path, price_df, episode_length=EPISODE_LENGTH, window_size=WIN
     env = env_creator({"price_df": price_df, "episode_length": episode_length, "window_size": window_size})
     obs, infos = env.reset(seed=seed)
 
-    # ===== FIXED: Capture start_step immediately after reset =====
+    
     start_step = None
     
     # Method 1: Try to get from infos (if env provides it)
@@ -166,7 +166,7 @@ def run_eval(ckpt_path, price_df, episode_length=EPISODE_LENGTH, window_size=WIN
             start_step = env.env._start
             print(f"✓ Got start_step from env.env._start: {start_step}")
         except AttributeError:
-            # Method 3: Try unwrapped
+            
             try:
                 start_step = env.unwrapped._start
                 print(f"✓ Got start_step from env.unwrapped._start: {start_step}")
@@ -174,7 +174,7 @@ def run_eval(ckpt_path, price_df, episode_length=EPISODE_LENGTH, window_size=WIN
                 # Last resort: use window_size as fallback
                 start_step = window_size
                 print(f"⚠ Warning: Could not access _start attribute, using window_size={window_size} as fallback")
-    # ===== END FIX =====
+    
 
     portfolios = {a: [] for a in AGENTS}
     allocations = {a: [] for a in AGENTS}
