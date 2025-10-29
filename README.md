@@ -1,112 +1,145 @@
-Multi-Agent Reinforcement Learning Trading System (MARLTS)
--------------------------------------------------------------
+Multi-Agent Reinforcement Learning Trading System
+--------------------------------------------------------
 
-This project implements a sophisticated Multi-Agent Reinforcement Learning (MARL) environment to train an autonomous trading agent. The agent learns to develop a profitable strategy not against static historical data, but by actively competing against a dynamic set of heuristic agents (Momentum, Mean-Reversion, and Market-Maker) in a realistic market simulation.
+A competitive trading environment where a PPO-trained agent learns to outperform rule-based strategies through adversarial multi-agent dynamics and reward shaping.
+The Challenge: Train an RL agent that doesn't just backtest against historical data, but learns to compete in real-time against opponents whose strategies directly affect market conditions.
 
-The core of the project is a Proximal Policy Optimization (PPO) agent, trained using the Ray RLlib framework, that learns to navigate a custom financial market built with the PettingZoo library.
-------------------------------------------------------------------------------------
+🎯 The Story
+--------------------------------------------------------
+Version 1: The Safe Player
+Initial training produced an agent that learned the "correct" local optimum: mimic the low-risk market maker and avoid volatility. It maximized the original reward function perfectly. The reward function was just wrong.
+Problem: The agent optimized for stability over differentiation.
 
-📈 Results: Learned Performance
-After training, the RL agent successfully developed a unique and superior trading strategy, consistently outperforming all three heuristic benchmarks in the evaluation period. The agent learned to balance aggressive, profit-seeking behavior with effective risk management.
+Version 2: The Aggressive Strategist
+After re-engineering the reward function (5x competitive penalty, RSI features, entropy bonuses), the same PPO algorithm developed a fundamentally different strategy—aggressive momentum-based trading that decisively outperformed all benchmarks.
+Insight: In multi-agent RL, the reward function doesn't just guide learning—it defines the Nash equilibrium your agent converges to.
 
-Final evaluation showing the RL Trader (red) achieving the highest portfolio value.
+📊 Results
+--------------------------------------------------------
+Initial Results (/plots/): RL agent mimicked market maker, minimal differentiation
+Improved Results (/plots_2/): RL agent (red line) achieved highest portfolio value, outperforming all heuristic baselines + AAPL benchmark
+Show Image
 
-✨ Key Features
-Custom MARL Environment: A financial market simulation built from scratch using PettingZoo, featuring multiple interacting agents.
+--------------------------------------------------------
 
-Market Realism: The environment models crucial real-world factors like transaction costs and market price impact, where the collective trading volume of all agents affects execution prices.
+🏗️ Technical Architecture
+--------------------------------------------------------
+Environment Design
 
-Advanced Agent AI: The primary agent uses Proximal Policy Optimization (PPO), a state-of-the-art reinforcement learning algorithm, implemented via Ray RLlib.
+Framework: Custom PettingZoo multi-agent environment
+Market Mechanics:
 
-Sophisticated Reward Shaping: The agent's learning is guided by a nuanced reward function that balances three objectives: raw profit, market stability (cooperative), and outperforming peers (competitive).
+Transaction costs and slippage
+Price impact from collective agent volume
+Non-stationary dynamics (agents affect each other's optimal strategies)
 
-Engineered Features: The agent's perception is enhanced with quantitative indicators like the Relative Strength Index (RSI) to enable more informed decision-making.
 
-------------------------------------------------------------------------------------
 
-🛠️ How It Works
-The system is composed of three main parts:
+Agents
+--------------------------------------------------------
 
-The Environment (multi_asset_env.py): This is the simulated stock market. It manages the price data, agent portfolios, and the rules of interaction. At each step, it takes actions from all agents, calculates the market impact of their combined trades, executes orders, and returns new observations and a shaped reward to each agent.
+RL Agent: PPO (Proximal Policy Optimization) via Ray RLlib
 
-The Agents (agents.py & PPO):
+Actor-Critic architecture with continuous action space
+Observation space: prices, portfolio state, RSI(14), opponent positions
+Trained with entropy regularization for exploration
 
-Heuristic Agents: Simple, rule-based bots (Momentum, Mean-Reversion, Market-Maker) that act as predictable competitors.
 
-RL Agent: A PPO-based agent with an Actor-Critic neural network architecture. It learns its strategy from scratch through trial and error, optimizing its behavior based on the rewards received from the environment.
+Heuristic Opponents:
+--------------------------------------------------------
 
-The Training & Evaluation Scripts (train_multi.py, evaluate.py):
+Momentum trader (trend-following)
+Mean-reversion trader (contrarian)
+Market maker (liquidity provider)
 
-train_multi.py uses Ray RLlib to orchestrate the learning process. It runs thousands of simulations in parallel, collecting experience and using it to update the RL agent's neural network weights via backpropagation.
 
-evaluate.py loads a trained agent's checkpoint and runs it through a deterministic episode to measure its final performance against the heuristic benchmarks.
 
-data_loader.py loads historic stock ticker data from yfinance 
+Reward Shaping (Critical Component)
+--------------------------------------------------------
+The agent optimizes a multi-objective reward function:
+pythonreward = profit_term + coop_weight * stability_term - comp_weight * relative_performance_term
+Key parameters:
 
-------------------------------------------------------------------------------------
+comp_weight: 0.1 → 0.5 (increased competitive pressure)
+coop_weight: 0.3 → 0.1 (reduced stability emphasis)
+entropy_coeff: 0.0 → 0.01 (encouraged exploration)
+
+
+🔬 Mathematical Foundation
+--------------------------------------------------------
+See /notes/ for handwritten derivations including:
+
+PPO objective function from first principles
+Generalized Advantage Estimation (GAE-λ)
+Policy gradient theorem
+Full forward pass example with reward shaping
+
 
 💻 Tech Stack
+--------------------------------------------------------
 Core: Python 3.9+
-
-Reinforcement Learning: Ray RLlib, PettingZoo, Gymnasium
-
+RL Framework: Ray RLlib, PettingZoo, Gymnasium
 Neural Networks: PyTorch
-
-Data Handling: Pandas, NumPy
-
+Data: yfinance, Pandas, NumPy
 Visualization: Matplotlib, TensorBoard
 
-🚀 Setup and Usage
+🚀 Setup
+--------------------------------------------------------
 Prerequisites
 
-Python 3.9 or later
+Python 3.9+
+Virtual environment (recommended)
 
-Pip package manager
-
-------------------------------------------------------------------------------------
-
-1. Installation
-
-Clone the repository and install the required packages. It's highly recommended to use a virtual environment.
-
-Bash
-# Clone the repository
-git clone <your-repo-link>
-cd <your-repo-name>
-
-# Create and activate a virtual environment (optional but recommended)
+Installation
+--------------------------------------------------------
+bashgit clone https://github.com/yourusername/marl-trading
+cd marl-trading
 python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-2. Training the Agent
 
-Run the training script to start the learning process. This will train a new PPO agent from scratch and save the model checkpoints in the checkpoints_multi/ directory.
-
-Bash
+Training
+--------------------------------------------------------
+`
 python train_multi.py
-You can monitor the training progress in real-time using TensorBoard:
+`
 
-Bash
-# Open a new terminal and run:
+Monitor training (separate terminal):
+`
 tensorboard --logdir checkpoints_multi/
-3. Evaluating the Agent
+`
 
-Once training is complete, run the evaluation script. It will automatically load the latest trained checkpoint and generate a plot of the agent's performance against the benchmarks.
-
-Bash
+Evaluation
+--------------------------------------------------------
+`
 python evaluate.py
-The performance chart will be saved in the plots/ directory.
-------------------------------------------------------------------------------------
+`
 
-Future Improvements
-Hyperparameter Tuning: Systematically tune the PPO algorithm's hyperparameters (e.g., learning rate, network size) using Ray Tune to optimize performance.
+🎓 Key Learnings
+--------------------------------------------------------
+Reward engineering > Algorithm selection: The same PPO implementation produced radically different strategies based solely on reward function design.
+Multi-agent complexity: Training against dynamic opponents that respond to your strategy is fundamentally harder than backtesting—and more realistic.
+Emergent behavior: Small changes to incentive structures (competitive penalties, entropy bonuses) can cause phase transitions in learned strategies.
 
-Expanded Feature Set: Incorporate more advanced quantitative features into the observation space, such as MACD, Bollinger Bands, or market-wide volatility indices (VIX).
 
-Curriculum Learning: Implement a curriculum where the agent first learns in a simplified environment (e.g., no transaction costs) before moving to the full, complex simulation.
-------------------------------------------------------------------------------------
+🔮 Future Work
+--------------------------------------------------------
+Hyperparameter optimization via Ray Tune
+Extended feature set: MACD, Bollinger Bands, order book imbalance
+Curriculum learning: Progressive difficulty (no costs → full simulation)
+Multi-asset generalization: Test transfer learning across different market regimes
 
-License
-This project is licensed under the MIT License. See the LICENSE file for details.
+
+📄 License
+--------------------------------------------------------
+MIT License - See LICENSE file for details
+
+🔗 Related Resources
+--------------------------------------------------------
+
+Technical Blog Post - Full deep dive into reward shaping and PPO mechanics
+Handwritten Notes - Complete mathematical derivations
+LinkedIn Post - Project summary and key insights
+
+
+Built by Danish Mohammed | www.linkedin.com/in/danish-mohammed-2b959b1a6
