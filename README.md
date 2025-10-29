@@ -100,28 +100,20 @@ pip install -r requirements.txt
 
 Training
 --------------------------------------------------------
-bashpython train_multi.py
+`
+python train_multi.py
+`
 
-# Monitor training (separate terminal)
+Monitor training (separate terminal):
+`
 tensorboard --logdir checkpoints_multi/
+`
+
 Evaluation
+--------------------------------------------------------
+`
 bashpython evaluate.py
-# Generates performance plots in /plots directory
-```
-
----
-
-## 📁 Project Structure
-```
-├── multi_asset_env.py      # PettingZoo environment implementation
-├── agents.py               # Heuristic agent strategies
-├── train_multi.py          # PPO training script (Ray RLlib)
-├── evaluate.py             # Evaluation and visualization
-├── data_loader.py          # yfinance data pipeline
-├── notes/                  # Handwritten PPO derivations (PDF)
-├── plots/                  # Version 1 results
-├── plots_2/                # Version 2 results (reward-shaped)
-└── checkpoints_multi/      # Trained model checkpoints
+`
 
 🎓 Key Learnings
 --------------------------------------------------------
