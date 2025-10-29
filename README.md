@@ -7,7 +7,7 @@ The Challenge: Train an RL agent that doesn't just backtest against historical d
 🎯 The Story
 --------------------------------------------------------
 Version 1: The Safe Player
-Initial training produced an agent that learned the "correct" local optimum—mimic the low-risk market maker and avoid volatility. It maximized the original reward function perfectly. The reward function was just wrong.
+Initial training produced an agent that learned the "correct" local optimum: mimic the low-risk market maker and avoid volatility. It maximized the original reward function perfectly. The reward function was just wrong.
 Problem: The agent optimized for stability over differentiation.
 
 Version 2: The Aggressive Strategist
@@ -112,7 +112,7 @@ tensorboard --logdir checkpoints_multi/
 Evaluation
 --------------------------------------------------------
 `
-bashpython evaluate.py
+python evaluate.py
 `
 
 🎓 Key Learnings
